@@ -1,0 +1,21 @@
+services:
+  cpm-server:
+    build: .
+    container_name: cpm-server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # The MySQL container publishes 3306 on the host, so reach it through the host gateway.
+      MYSQL_HOST: host.docker.internal
+      TOKEN_DB_URL: sqlite+aiosqlite:////data/cpm_auth.db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Bound to localhost on purpose. Put an HTTPS reverse proxy in front and forward ONLY /mcp
+      # to it (see README); /admin/v1 must never be exposed to the internet.
+      - "127.0.0.1:${CPM_PORT:-8000}:8000"
+    volumes:
+      - cpm_data:/data
+
+volumes:
+  cpm_data:

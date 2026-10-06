@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- cpm-server ---
+# Local runtime data (SQLite token store, logs). Anchored to the repo root so that the
+# Python package src/cpm_server/data/ is NOT ignored.
+/data/
+
+# Local MCP client config: it holds a real bearer token, never commit it.
+.mcp.json

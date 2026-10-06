@@ -20,13 +20,20 @@ class BearerAuthMiddleware:
     token or editing its tables takes effect immediately.
     """
 
-    def __init__(self, app: ASGIApp, authenticate: Authenticator) -> None:
+    def __init__(self, app: ASGIApp, authenticate: Authenticator, paths: tuple[str, ...] = ("/mcp", "/mcp/")) -> None:
         self.app = app
         self._authenticate = authenticate
+        self._paths = paths
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
+            return
+
+        # Fail closed: only the MCP endpoint is ever forwarded. Anything else is a plain 404, so a wrong
+        # URL (e.g. a mistyped admin path) is not mistaken for an authentication problem.
+        if scope["path"] not in self._paths:
+            await JSONResponse({"error": "not_found"}, status_code=404)(scope, receive, send)
             return
 
         scheme, _, credential = Headers(scope=scope).get("authorization", "").partition(" ")
